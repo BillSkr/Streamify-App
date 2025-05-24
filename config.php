@@ -29,9 +29,9 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 // YouTube API configuration (REPLACE WITH YOUR OWN!)
-define('YOUTUBE_API_KEY', 'YOUR_YOUTUBE_API_KEY_HERE');
-define('YOUTUBE_CLIENT_ID', 'YOUR_CLIENT_ID_HERE');
-define('YOUTUBE_CLIENT_SECRET', 'YOUR_CLIENT_SECRET_HERE');
+define('YOUTUBE_API_KEY', 'AIzaSyCu3hRyHBBikQW158aR5MXGkQScOX88COs');
+define('YOUTUBE_CLIENT_ID', '378754135872-v7ull544ibccmovrppds20346bij1p7j.apps.googleusercontent.com');
+define('YOUTUBE_CLIENT_SECRET', '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');
 
 // Helper functions
 function isLoggedIn() {
