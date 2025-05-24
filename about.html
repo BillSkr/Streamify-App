@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Σκοπός - Streamify</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="nav-logo">Streamify</h1>
+            <div class="nav-menu">
+                <a href="index.html" class="nav-link">Αρχική</a>
+                <a href="about.html" class="nav-link">Σκοπός</a>
+                <a href="help.html" class="nav-link">Βοήθεια</a>
+                <a href="register.php" class="nav-link">Εγγραφή</a>
+                <a href="login.php" class="nav-link">Σύνδεση</a>
+                <button id="theme-toggle" class="theme-btn">🌙</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            <h1 class="text-center" style="margin: 2rem 0;">Σκοπός του Streamify</h1>
+            
+            <div class="accordion">
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>Τι είναι το Streamify;</h3>
+                    </div>
+                    <div class="accordion-content">
+                        <p>Το Streamify είναι μια καινοτόμα πλατφόρμα που επιτρέπει στους χρήστες να δημιουργούν, διαχειρίζονται και μοιράζονται λίστες με το αγαπημένο τους streaming περιεχόμενο από το YouTube. Η πλατφόρμα μας στοχεύει στη δημιουργία μιας κοινότητας όπου οι χρήστες μπορούν να ανακαλύπτουν νέο περιεχόμενο μέσω των συστάσεων άλλων χρηστών.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>Πώς μπορώ να εγγραφώ;</h3>
+                    </div>
+                    <div class="accordion-content">
+                        <p>Η εγγραφή στο Streamify είναι απλή και γρήγορη:</p>
+                        <ol>
+                            <li>Κάντε κλικ στο κουμπί "Εγγραφή" στην αρχική σελίδα</li>
+                            <li>Συμπληρώστε τα απαιτούμενα στοιχεία (όνομα, επώνυμο, username, email, κωδικός)</li>
+                            <li>Επιβεβαιώστε την εγγραφή σας</li>
+                            <li>Αρχίστε να δημιουργείτε τις πρώτες σας λίστες!</li>
+                        </ol>
+                        <p><strong>Σημείωση:</strong> Το username και το email πρέπει να είναι μοναδικά στην πλατφόρμα.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>Γιατί να χρησιμοποιήσω το Streamify;</h3>
+                    </div>
+                    <div class="accordion-content">
+                        <p>Το Streamify προσφέρει πολλά πλεονεκτήματα:</p>
+                        <ul>
+                            <li><strong>Οργάνωση Περιεχομένου:</strong> Δημιουργήστε θεματικές λίστες με τα αγαπημένα σας βίντεο</li>
+                            <li><strong>Κοινότητα:</strong> Ακολουθήστε άλλους χρήστες και ανακαλύψτε νέο περιεχόμενο</li>
+                            <li><strong>Ιδιωτικότητα:</strong> Επιλέξτε αν οι λίστες σας θα είναι δημόσιες ή ιδιωτικές</li>
+                            <li><strong>Εύκολη Αναπαραγωγή:</strong> Παίξτε τα βίντεο απευθείας από την πλατφόρμα</li>
+                            <li><strong>Αναζήτηση:</strong> Βρείτε εύκολα περιεχόμενο με προηγμένες επιλογές αναζήτησης</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>Ποιες είναι οι κύριες λειτουργίες;</h3>
+                    </div>
+                    <div class="accordion-content">
+                        <p>Οι κύριες λειτουργίες του Streamify περιλαμβάνουν:</p>
+                        <ul>
+                            <li><strong>Δημιουργία Λιστών:</strong> Δημιουργήστε προσωπικές λίστες περιεχομένου</li>
+                            <li><strong>Προσθήκη Βίντεο:</strong> Αναζητήστε και προσθέστε βίντεο από το YouTube</li>
+                            <li><strong>Διαχείριση Προφίλ:</strong> Επεξεργαστείτε τα στοιχεία σας</li>
+                            <li><strong>Ακολούθηση Χρηστών:</strong> Ακολουθήστε άλλους χρήστες για να βλέπετε τις δημόσιες λίστες τους</li>
+                            <li><strong>Αναπαραγωγή:</strong> Παρακολουθήστε βίντεο απευθείας από την πλατφόρμα</li>
+                            <li><strong>Αναζήτηση:</strong> Βρείτε περιεχόμενο βάσει τίτλου, ημερομηνίας ή χρήστη</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>Πώς λειτουργούν οι λίστες;</h3>
+                    </div>
+                    <div class="accordion-content">
+                        <p>Οι λίστες στο Streamify είναι συλλογές βίντεο που μπορείτε να οργανώσετε όπως θέλετε:</p>
+                        <ul>
+                            <li><strong>Δημόσιες Λίστες:</strong> Ορατές σε όλους τους χρήστες που σας ακολουθούν</li>
+                            <li><strong>Ιδιωτικές Λίστες:</strong> Ορατές μόνο σε εσάς</li>
+                            <li><strong>Θεματική Οργάνωση:</strong> Δημιουργήστε λίστες για διαφορετικά θέματα (μουσική, ταινίες, εκπαίδευση κ.ά.)</li>
+                            <li><strong>Εύκολη Διαχείριση:</strong> Προσθέστε, αφαιρέστε ή αναδιοργανώστε το περιεχόμενο</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h3>Πώς προστατεύεται η ιδιωτικότητά μου;</h3>
+                    </div>
+                    <div class="accordion-content">
+                        <p>Η ιδιωτικότητα σας είναι προτεραιότητά μας:</p>
+                        <ul>
+                            <li>Τα προσωπικά σας στοιχεία προστατεύονται με σύγχρονες τεχνικές ασφάλειας</li>
+                            <li>Μπορείτε να ελέγχετε ποιες λίστες είναι δημόσιες και ποιες ιδιωτικές</li>
+                            <li>Οι κωδικοί πρόσβασης αποθηκεύονται κρυπτογραφημένοι</li>
+                            <li>Μπορείτε να διαγράψετε το προφίλ σας οποιαδήποτε στιγμή</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Streamify - Ιόνιο Πανεπιστήμιο</p>
+        </div>
+    </footer>
+
+    <script src="theme.js"></script>
+    <script src="accordion.js"></script>
+</body>
+</html>
