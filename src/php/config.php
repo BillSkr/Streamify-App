@@ -4,37 +4,33 @@
     $username = 'root';
     $password = '';
     $dbname = 'di_internet_technologies_project';
-    
-    // Define database constants
-    define('DB_HOST', $servername);
-    define('DB_USER', $username);
-    define('DB_PASS', $password);
-    define('DB_NAME', $dbname);
-    
-    $conn = new mysqli($servername, $username, $password, $dbname);
-    
-    if ($conn->connect_error) {
-        die("Connection failed: {$conn->connect_error}");
-    } else {
-        mysqli_set_charset($conn, 'utf8');	
-    }
-    
 
-// First, create database if it doesn't exist
-try {
-    try {
+        // Define database constants
+        define('DB_HOST', $servername);
+        define('DB_USER', $username);
+        define('DB_PASS', $password);
+        define('DB_NAME', $dbname);
+        
+        try {
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        
+        if ($conn->connect_error) {
+            die("Connection failed: {$conn->connect_error}");
+        } else {
+            mysqli_set_charset($conn, 'utf8');	
+        }
+        
+
+    // First, create database if it doesn't exist
         $pdo_setup = new PDO("mysql:host=" . DB_HOST . ";charset=utf8", DB_USER, DB_PASS);
-    } catch (PDOException $e) {
-        die("Database setup failed: Please check your database host and credentials. " . $e->getMessage());
+        $pdo_setup->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo_setup->exec("CREATE DATABASE IF NOT EXISTS " . DB_NAME . " CHARACTER SET utf8 COLLATE utf8_general_ci");
+    } catch(PDOException $e) {
+        die("Database setup failed: " . $e->getMessage());
     }
-    $pdo_setup->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo_setup->exec("CREATE DATABASE IF NOT EXISTS " . DB_NAME . " CHARACTER SET utf8 COLLATE utf8_general_ci");
-} catch(PDOException $e) {
-    die("Database setup failed: " . $e->getMessage());
-}
 
-// Create database connection
-try {
+    // Create database connection
+    try {
     $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8", DB_USER, DB_PASS);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
