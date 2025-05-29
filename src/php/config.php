@@ -22,7 +22,11 @@
 
 // First, create database if it doesn't exist
 try {
-    $pdo_setup = new PDO("mysql:host=" . DB_HOST . ";charset=utf8", DB_USER, DB_PASS);
+    try {
+        $pdo_setup = new PDO("mysql:host=" . DB_HOST . ";charset=utf8", DB_USER, DB_PASS);
+    } catch (PDOException $e) {
+        die("Database setup failed: Please check your database host and credentials. " . $e->getMessage());
+    }
     $pdo_setup->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo_setup->exec("CREATE DATABASE IF NOT EXISTS " . DB_NAME . " CHARACTER SET utf8 COLLATE utf8_general_ci");
 } catch(PDOException $e) {
@@ -45,9 +49,11 @@ if (session_status() == PHP_SESSION_NONE) {
 
 // YouTube API configuration (REPLACE WITH YOUR OWN!)
 define('YOUTUBE_API_KEY', 'AIzaSyCu3hRyHBBikQW158aR5MXGkQScOX88COs');
-define('YOUTUBE_CLIENT_ID', '378754135872-v7ull544ibccmovrppds20346bij1p7j.apps.googleusercontent.com');
-define('YOUTUBE_CLIENT_SECRET', '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');
-
+if (!function_exists('isLoggedIn')) {
+    function isLoggedIn() {
+        return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+    }
+}
 // Helper functions
 function isLoggedIn() {
     return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
