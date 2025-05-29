@@ -1,56 +1,50 @@
 <?php
-// Database configuration - try multiple connection methods
-$servername = '127.0.0.1'; // Use IP instead of localhost to avoid socket issues
-$username = 'root';
-$password = '';
-$dbname = 'di_internet_technologies_project';
-$port = 3306; // Specify port explicitly
-
-// Define database constants
-define('DB_HOST', $servername);
-define('DB_USER', $username);
-define('DB_PASS', $password);
-define('DB_NAME', $dbname);
-define('DB_PORT', $port);
-
-// Try to connect with explicit port
-$conn = new mysqli($servername, $username, $password, $dbname, $port);
-
-if ($conn->connect_error) {
-    die("Connection failed: {$conn->connect_error}");
-} else {
-    mysqli_set_charset($conn, 'utf8');	
-}
-
-// First, create database if it doesn't exist
-try {
-    $pdo_setup = new PDO("mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";charset=utf8", DB_USER, DB_PASS);
-    $pdo_setup->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo_setup->exec("CREATE DATABASE IF NOT EXISTS " . DB_NAME . " CHARACTER SET utf8 COLLATE utf8_general_ci");
-} catch(PDOException $e) {
-    die("Database setup failed: " . $e->getMessage());
-}
-
-// Create database connection
-try {
-    $pdo = new PDO("mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8", DB_USER, DB_PASS);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-} catch(PDOException $e) {
-    die("Database connection failed: " . $e->getMessage());
-}
-
-// Session configuration
+// Start session first
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// YouTube API configuration (REPLACE WITH YOUR OWN!)
-define('YOUTUBE_API_KEY', 'AIzaSyCu3hRyHBBikQW158aR5MXGkQScOX88COs');
-define('YOUTUBE_CLIENT_ID', '378754135872-v7ull544ibccmovrppds20346bij1p7j.apps.googleusercontent.com');
-define('YOUTUBE_CLIENT_SECRET', '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');
+// Database configuration
+$servername = 'localhost';
+$username = 'root';
+$password = '';
+$dbname = 'di_internet_technologies_project';
 
-// Helper functions - wrap in function_exists to prevent redeclaration errors
+// Create connection using mysqli
+$conn = new mysqli($servername, $username, $password);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Create database if not exists
+$sql = "CREATE DATABASE IF NOT EXISTS $dbname";
+if ($conn->query($sql) === TRUE) {
+    // Database created or already exists
+} else {
+    die("Error creating database: " . $conn->error);
+}
+
+// Select the database
+$conn->select_db($dbname);
+mysqli_set_charset($conn, 'utf8');
+
+// Create PDO connection
+try {
+    $pdo = new PDO("mysql:host=$servername;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+} catch(PDOException $e) {
+    die("PDO Connection failed: " . $e->getMessage());
+}
+
+// YouTube API configuration
+if (!defined('YOUTUBE_API_KEY')) {
+    define('YOUTUBE_API_KEY', 'AIzaSyCu3hRyHBBikQW158aR5MXGkQScOX88COs');
+}
+
+// Helper functions - only declare if they don't exist
 if (!function_exists('isLoggedIn')) {
     function isLoggedIn() {
         return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
@@ -91,20 +85,7 @@ if (!function_exists('verifyPassword')) {
     }
 }
 
-// Error handling
-if (!function_exists('showError')) {
-    function showError($message) {
-        return "<div class='error-message'>" . htmlspecialchars($message) . "</div>";
-    }
-}
-
-if (!function_exists('showSuccess')) {
-    function showSuccess($message) {
-        return "<div class='success-message'>" . htmlspecialchars($message) . "</div>";
-    }
-}
-
-// Create tables if they don't exist
+// Create tables
 try {
     // Users table
     $pdo->exec("
@@ -116,9 +97,7 @@ try {
             email VARCHAR(255) UNIQUE NOT NULL,
             password_hash VARCHAR(255) NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            INDEX idx_username (username),
-            INDEX idx_email (email)
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB
     ");
 
@@ -132,9 +111,7 @@ try {
             is_public BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-            INDEX idx_user_id (user_id),
-            INDEX idx_public (is_public)
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         ) ENGINE=InnoDB
     ");
 
@@ -152,10 +129,7 @@ try {
             thumbnail_url VARCHAR(500),
             added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (list_id) REFERENCES content_lists(id) ON DELETE CASCADE,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-            INDEX idx_list_id (list_id),
-            INDEX idx_user_id (user_id),
-            INDEX idx_youtube_id (youtube_id)
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         ) ENGINE=InnoDB
     ");
 
@@ -168,17 +142,14 @@ try {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE,
-            UNIQUE KEY unique_follow (follower_id, following_id),
-            INDEX idx_follower (follower_id),
-            INDEX idx_following (following_id)
+            UNIQUE KEY unique_follow (follower_id, following_id)
         ) ENGINE=InnoDB
     ");
 
-    // Insert sample users (only if none exist)
+    // Insert sample users if none exist
     $stmt = $pdo->query("SELECT COUNT(*) FROM users");
     if ($stmt->fetchColumn() == 0) {
         $hashedPassword = password_hash('password', PASSWORD_DEFAULT);
-        
         $pdo->exec("
             INSERT INTO users (first_name, last_name, username, email, password_hash) VALUES
             ('Admin', 'User', 'admin', 'admin@streamify.gr', '$hashedPassword'),
@@ -187,7 +158,6 @@ try {
     }
 
 } catch(PDOException $e) {
-    // Tables might already exist, that's okay
-    error_log("Database setup note: " . $e->getMessage());
+    error_log("Database setup error: " . $e->getMessage());
 }
 ?>
