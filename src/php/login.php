@@ -94,6 +94,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="auth-links">
                 <p>Δεν έχετε λογαριασμό; <a href="register.php">Εγγραφείτε εδώ</a></p>
             </div>
+            
+            <!-- Add demo credentials info -->
+            <div style="margin-top: 2rem; padding: 1rem; background: var(--bg-secondary); border-radius: 5px; font-size: 0.9rem;">
+                <p style="margin: 0;"><strong>Demo Credentials:</strong></p>
+                <p style="margin: 0.5rem 0 0 0;">Username: admin | Password: password</p>
+                <p style="margin: 0.25rem 0 0 0;">Username: test | Password: password</p>
+            </div>
         </div>
     </main>
 
