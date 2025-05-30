@@ -23,10 +23,14 @@ if (!empty($searchQuery) || !empty($searchUser) || !empty($dateFrom) || !empty($
                            COUNT(DISTINCT cl.id) as list_count,
                            COUNT(DISTINCT ci.id) as video_count,
                            MAX(cl.updated_at) as last_activity,
-                           EXISTS(SELECT 1 FROM user_follows uf WHERE uf.follower_id = ? AND uf.following_id = u.id) as is_following
+                           CASE 
+                               WHEN uf.follower_id IS NOT NULL THEN 1 
+                               ELSE 0 
+                           END as is_following
                     FROM users u
                     LEFT JOIN content_lists cl ON u.id = cl.user_id AND cl.is_public = 1
                     LEFT JOIN content_items ci ON cl.id = ci.list_id
+                    LEFT JOIN user_follows uf ON uf.follower_id = ? AND uf.following_id = u.id
                     WHERE u.id != ?";
             
             $params = [$_SESSION['user_id'], $_SESSION['user_id']];
@@ -37,8 +41,8 @@ if (!empty($searchQuery) || !empty($searchUser) || !empty($dateFrom) || !empty($
                 $params = array_merge($params, [$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
             }
             
-            $sql .= " GROUP BY u.id ORDER BY u.username LIMIT ? OFFSET ?";
-            $params = array_merge($params, [$perPage, $offset]);
+            $sql .= " GROUP BY u.id, u.username, u.first_name, u.last_name, u.email, uf.follower_id 
+                      ORDER BY u.username LIMIT $perPage OFFSET $offset";
             
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
@@ -59,16 +63,15 @@ if (!empty($searchQuery) || !empty($searchUser) || !empty($dateFrom) || !empty($
             $totalResults = $stmt->fetchColumn();
             
         } elseif ($searchType === 'lists') {
-            // Search lists
+            // Search lists - Fixed visibility logic
             $sql = "SELECT cl.*, u.username, u.first_name, u.last_name,
                            COUNT(ci.id) as item_count,
                            MAX(ci.added_at) as last_item_added
                     FROM content_lists cl
                     JOIN users u ON cl.user_id = u.id
                     LEFT JOIN content_items ci ON cl.id = ci.list_id
-                    WHERE (cl.is_public = 1 OR cl.user_id = ? OR EXISTS(
-                        SELECT 1 FROM user_follows uf WHERE uf.follower_id = ? AND uf.following_id = cl.user_id
-                    ))";
+                    LEFT JOIN user_follows uf ON uf.follower_id = ? AND uf.following_id = cl.user_id
+                    WHERE (cl.is_public = 1 OR cl.user_id = ? OR uf.follower_id IS NOT NULL)";
             
             $params = [$_SESSION['user_id'], $_SESSION['user_id']];
             
@@ -94,34 +97,56 @@ if (!empty($searchQuery) || !empty($searchUser) || !empty($dateFrom) || !empty($
                 $params[] = $dateTo . ' 23:59:59';
             }
             
-            $sql .= " GROUP BY cl.id ORDER BY cl.updated_at DESC LIMIT ? OFFSET ?";
-            $params = array_merge($params, [$perPage, $offset]);
+            $sql .= " GROUP BY cl.id ORDER BY cl.updated_at DESC LIMIT $perPage OFFSET $offset";
             
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             $results = $stmt->fetchAll();
             
-            // Get total count for lists
-            $countSql = str_replace("SELECT cl.*, u.username, u.first_name, u.last_name, COUNT(ci.id) as item_count, MAX(ci.added_at) as last_item_added", "SELECT COUNT(DISTINCT cl.id)", $sql);
-            $countSql = preg_replace('/GROUP BY.*$/', '', $countSql);
-            $countSql = preg_replace('/ORDER BY.*$/', '', $countSql);
-            $countSql = preg_replace('/LIMIT.*$/', '', $countSql);
+            // Get total count for lists - Simplified approach
+            $countSql = "SELECT COUNT(DISTINCT cl.id) 
+                        FROM content_lists cl
+                        JOIN users u ON cl.user_id = u.id
+                        LEFT JOIN user_follows uf ON uf.follower_id = ? AND uf.following_id = cl.user_id
+                        WHERE (cl.is_public = 1 OR cl.user_id = ? OR uf.follower_id IS NOT NULL)";
             
-            $countParams = array_slice($params, 0, -2); // Remove LIMIT and OFFSET params
+            $countParams = [$_SESSION['user_id'], $_SESSION['user_id']];
+            
+            if (!empty($searchQuery)) {
+                $countSql .= " AND (cl.title LIKE ? OR cl.description LIKE ?)";
+                $searchTerm = "%$searchQuery%";
+                $countParams = array_merge($countParams, [$searchTerm, $searchTerm]);
+            }
+            
+            if (!empty($searchUser)) {
+                $countSql .= " AND (u.username LIKE ? OR u.first_name LIKE ? OR u.last_name LIKE ?)";
+                $userTerm = "%$searchUser%";
+                $countParams = array_merge($countParams, [$userTerm, $userTerm, $userTerm]);
+            }
+            
+            if (!empty($dateFrom)) {
+                $countSql .= " AND cl.created_at >= ?";
+                $countParams[] = $dateFrom . ' 00:00:00';
+            }
+            
+            if (!empty($dateTo)) {
+                $countSql .= " AND cl.created_at <= ?";
+                $countParams[] = $dateTo . ' 23:59:59';
+            }
+            
             $stmt = $pdo->prepare($countSql);
             $stmt->execute($countParams);
             $totalResults = $stmt->fetchColumn();
             
         } else {
-            // Search content (videos)
+            // Search content (videos) - Fixed visibility logic
             $sql = "SELECT ci.*, cl.title as list_title, cl.is_public, cl.user_id as list_owner_id,
                            u.username, u.first_name, u.last_name
                     FROM content_items ci
                     JOIN content_lists cl ON ci.list_id = cl.id
                     JOIN users u ON ci.user_id = u.id
-                    WHERE (cl.is_public = 1 OR cl.user_id = ? OR EXISTS(
-                        SELECT 1 FROM user_follows uf WHERE uf.follower_id = ? AND uf.following_id = cl.user_id
-                    ))";
+                    LEFT JOIN user_follows uf ON uf.follower_id = ? AND uf.following_id = cl.user_id
+                    WHERE (cl.is_public = 1 OR cl.user_id = ? OR uf.follower_id IS NOT NULL)";
             
             $params = [$_SESSION['user_id'], $_SESSION['user_id']];
             
@@ -147,26 +172,53 @@ if (!empty($searchQuery) || !empty($searchUser) || !empty($dateFrom) || !empty($
                 $params[] = $dateTo . ' 23:59:59';
             }
             
-            $sql .= " ORDER BY ci.added_at DESC LIMIT ? OFFSET ?";
-            $params = array_merge($params, [$perPage, $offset]);
+            $sql .= " ORDER BY ci.added_at DESC LIMIT $perPage OFFSET $offset";
             
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             $results = $stmt->fetchAll();
             
-            // Get total count for content
-            $countSql = str_replace("SELECT ci.*, cl.title as list_title, cl.is_public, cl.user_id as list_owner_id, u.username, u.first_name, u.last_name", "SELECT COUNT(*)", $sql);
-            $countSql = preg_replace('/ORDER BY.*$/', '', $countSql);
-            $countSql = preg_replace('/LIMIT.*$/', '', $countSql);
+            // Get total count for content - Simplified approach
+            $countSql = "SELECT COUNT(*) 
+                        FROM content_items ci
+                        JOIN content_lists cl ON ci.list_id = cl.id
+                        JOIN users u ON ci.user_id = u.id
+                        LEFT JOIN user_follows uf ON uf.follower_id = ? AND uf.following_id = cl.user_id
+                        WHERE (cl.is_public = 1 OR cl.user_id = ? OR uf.follower_id IS NOT NULL)";
             
-            $countParams = array_slice($params, 0, -2); // Remove LIMIT and OFFSET params
+            $countParams = [$_SESSION['user_id'], $_SESSION['user_id']];
+            
+            if (!empty($searchQuery)) {
+                $countSql .= " AND (ci.title LIKE ? OR ci.description LIKE ? OR cl.title LIKE ?)";
+                $searchTerm = "%$searchQuery%";
+                $countParams = array_merge($countParams, [$searchTerm, $searchTerm, $searchTerm]);
+            }
+            
+            if (!empty($searchUser)) {
+                $countSql .= " AND (u.username LIKE ? OR u.first_name LIKE ? OR u.last_name LIKE ?)";
+                $userTerm = "%$searchUser%";
+                $countParams = array_merge($countParams, [$userTerm, $userTerm, $userTerm]);
+            }
+            
+            if (!empty($dateFrom)) {
+                $countSql .= " AND ci.added_at >= ?";
+                $countParams[] = $dateFrom . ' 00:00:00';
+            }
+            
+            if (!empty($dateTo)) {
+                $countSql .= " AND ci.added_at <= ?";
+                $countParams[] = $dateTo . ' 23:59:59';
+            }
+            
             $stmt = $pdo->prepare($countSql);
             $stmt->execute($countParams);
             $totalResults = $stmt->fetchColumn();
         }
         
     } catch (PDOException $e) {
-        $error = 'Σφάλμα κατά την αναζήτηση. Παρακαλώ δοκιμάστε ξανά.';
+        // For debugging - temporarily show the actual error
+        $error = 'Σφάλμα κατά την αναζήτηση: ' . $e->getMessage();
+        // In production, use: $error = 'Σφάλμα κατά την αναζήτηση. Παρακαλώ δοκιμάστε ξανά.';
     }
 }
 
